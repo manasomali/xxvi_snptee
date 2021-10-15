@@ -132,9 +132,6 @@ dmypy.json
 # Pessoal
 dataset_audios/*
 dataset_textos/*
-resultados/*
-ker/input/*
-ker/output/*
 pos-processamento/trocas.py
 pos-processamento/input/*
 pos-processamento/output/*
@@ -143,16 +140,14 @@ pre-processamento/output/*
 pre-processamento/semsilencio/*
 transcricao-wit/output/*
 transcricao-wit/.env
-wer/input/*
-wer/output/*
+wereker/input/*
+wereker/output/*
 
-!ker/input/.gitkeep
-!ker/output/.gitkeep
 !pos-processamento/input/.gitkeep
 !pos-processamento/output/.gitkeep
 !pre-processamento/input/.gitkeep
 !pre-processamento/output/.gitkeep
 !pre-processamento/semsilencio/.gitkeep
 !transcricao-wit/output/.gitkeep
-!wer/input/.gitkeep
-!wer/output/.gitkeep
+!wereker/input/.gitkeep
+!wereker/output/.gitkeep

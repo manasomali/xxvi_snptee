@@ -2,11 +2,10 @@ import collections
 import contextlib
 import sys
 import wave
+
 import webrtcvad
 import os
 import glob
-from pydub import AudioSegment
-from auditok import split
 
 
 def read_wave(path):
@@ -132,66 +131,31 @@ def vad_collector(sample_rate, frame_duration_ms,
 
 
 def main():
-    inputdirectory = os.path.dirname(os.path.realpath(__file__)) + '\input'
     outputdirectory = os.path.dirname(os.path.realpath(__file__)) + '\output'
-    
+
     directory = os.path.dirname(os.path.realpath(__file__)) + '\input\*.wav'
     caminhos = (glob.glob(directory))
     
-    decide = input('Remoção de silencio (s/n)? ')
-    if decide == 's':
-        inputdirectory = os.path.dirname(os.path.realpath(__file__)) + '\semsilencio'
-        agressividade = input('Informe a agressividade [0 a 3]: ')
-        # remove silencio
-        for caminho in caminhos:
-            audio, sample_rate = read_wave(caminho)
-            vad = webrtcvad.Vad(int(agressividade))
-            frames = frame_generator(30, audio, sample_rate)
-            frames = list(frames)
-            segments = vad_collector(sample_rate, 30, 300, vad, frames)
-            concataudio = [segment for segment in segments]
-            joinedaudio = b"".join(concataudio)
-            write_wave(caminho.replace('input', 'semsilencio'), joinedaudio, sample_rate)
-
-    # divide os audios em regioes e salva cada regiao de cada audio para uma pasta separada
-    nomes_audios = []
-    for nome in os.listdir(inputdirectory):
-        if ".wav" in nome:
-            nomes_audios.append(nome)
-            
-    for nome_audio in nomes_audios:
+    # agressividade = 0 ok
+    # agressividade = 1 ok
+    # agressividade = 2
+    # agressividade = 3
+    
+    agressividade = input('Informe a agressividade [0 a 3]: ')
+    for caminho in caminhos:
+        audio, sample_rate = read_wave(caminho)
+        vad = webrtcvad.Vad(int(agressividade))
+        frames = frame_generator(30, audio, sample_rate)
+        frames = list(frames)
+        segments = vad_collector(sample_rate, 30, 300, vad, frames)
+        nome_audio=caminho.split("\\")[-1]
         cont=0
-        audio_regioes = split(os.path.join(inputdirectory, nome_audio),
-            min_dur=0.1,     # minimum duration of a valid audio event in seconds
-            max_dur=20,      # maximum duration of an event
-            max_silence=0.2  # maximum duration of tolerated continuous silence within an event
-        )
         os.makedirs(os.path.join(outputdirectory,nome_audio.replace('.wav', '')), exist_ok=True)
-        for region in audio_regioes:
-            region.save(os.path.join(outputdirectory,nome_audio.replace('.wav', ''))+'/'+nome_audio.replace('.wav', '_')+str(cont)+".wav")
-            cont=cont+1
-
-    # adiciona xs de silencio no inicio dos audios para melhor processamento do wit
-    silencio_dur = input('Informe o silencio a ser adicionado (seg): ')
-    if float(silencio_dur) != 0:
-        # pegando caminho e nomes dos audios - saida
-        diretorios_audios_saida = []
-        for path, subdirs, files in os.walk(outputdirectory):
-            for name in files:
-                if ".wav" in name:
-                    diretorios_audios_saida.append(os.path.join(path, name))
-                
-        silent_segment = AudioSegment.silent(duration=float(silencio_dur)*1000)
-        cont=0
-        for audio_saida in diretorios_audios_saida:
-            audio = AudioSegment.from_wav(audio_saida)
-            final_audio = silent_segment + audio
-            final_audio.export(audio_saida, format="wav")
-
+        for segment in segments:
+            path = os.path.join(outputdirectory,nome_audio.replace('.wav', ''))+'/'+nome_audio.replace('.wav', '_')+str(cont)+".wav"
+            write_wave(path, segment, sample_rate)
+            cont+=1
+    
 
 if __name__ == '__main__':
     main()
-
-
-
-
